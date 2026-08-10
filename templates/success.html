@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Success | Ganpati Aagman</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body class="success-page"><main class="success-card"><div class="success-icon">🎉</div><p class="eyebrow">SUBMISSION COMPLETE</p><h1>Entry Submitted <span>Successfully!</span></h1><p class="muted">Thank you for participating in the Ganpati Aagman Photo &amp; Video Competition. Your entry has been received.</p><div id="details" class="summary text-start"></div><p class="small-note">Keep your Submission ID safe for future reference.</p><a href="{{ url_for('home') }}" class="btn btn-gold">BACK TO HOME</a></main>
+<script>
+const d = JSON.parse(sessionStorage.getItem('ganpati_submission') || '{}');
+document.getElementById('details').innerHTML = `
+  <div><b>Participant</b><span>${d.name || '-'}</span></div>
+  <div><b>Instagram</b><span>${d.instagram || '-'}</span></div>
+  <div><b>Competition</b><span>${d.competition || '-'}</span></div>
+  <div><b>Captured Using</b><span>${d.captured || '-'}</span></div>
+  <div><b>Submission ID</b><span>${d.id || '-'}</span></div>`;
+// Clear session after showing
+sessionStorage.removeItem('ganpati_registration');
+sessionStorage.removeItem('ganpati_submission');
+</script>
+</body></html>

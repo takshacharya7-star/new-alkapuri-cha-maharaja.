@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New alkapuri cha maharaja | Ganpati Aagman Competition</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg fixed-top">
+<div class="container">
+<a class="navbar-brand" href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:38px;width:auto;margin-right:8px;vertical-align:middle;border-radius:6px"> New alkapuri cha maharaja</a>
+<button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span>☰</span></button>
+<div class="collapse navbar-collapse" id="nav">
+<ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+<li><a class="nav-link" href="#competition">Competition</a></li>
+<li><a class="nav-link" href="#rules">Rules</a></li>
+<li><a class="nav-link" href="#prizes">Prizes</a></li>
+<li><a class="btn btn-gold px-4" href="{{ url_for('registration') }}">Register Now</a></li>
+</ul>
+</div></div></nav>
+
+<header class="hero">
+<div class="hero-glow"></div>
+<div class="container hero-content">
+<div class="om">ॐ</div>
+<p class="eyebrow">✨ CELEBRATE • CAPTURE • CREATE ✨</p>
+<h1>Ganpati Aagman<br><span>Photo & Video Competition</span></h1>
+<p class="lead">Capture the divine arrival of Bappa and showcase your creativity.</p>
+<div class="d-flex flex-wrap gap-3 justify-content-center">
+<a href="{{ url_for('registration') }}" class="btn btn-gold btn-lg">REGISTER NOW →</a>
+<a href="#competition" class="btn btn-outline-light btn-lg">VIEW COMPETITION</a>
+</div>
+</div>
+<div class="scroll">SCROLL TO EXPLORE ↓</div>
+</header>
+
+<section id="competition" class="section">
+<div class="container">
+<div class="section-head"><p class="eyebrow">THE CHALLENGE</p><h2>Celebrate Bappa Through <span>Your Lens</span></h2><p>Choose your category, capture the most memorable Ganpati Aagman moment and submit your best creation.</p></div>
+<div class="row g-4">
+<div class="col-md-6"><div class="feature-card"><div class="icon">📸</div><h3>Photo Competition</h3><p>Freeze a divine moment of Bappa's arrival and turn it into a memorable frame.</p><div class="chips"><span>📱 Mobile</span><span>📷 Camera</span></div></div></div>
+<div class="col-md-6"><div class="feature-card"><div class="icon">🎥</div><h3>Video Competition</h3><p>Create an engaging visual story that captures the energy and devotion of Aagman.</p><div class="chips"><span>📱 Mobile</span><span>📷 Camera</span></div></div></div>
+</div>
+</div></section>
+
+<section class="section dark-section">
+<div class="container">
+<div class="section-head"><p class="eyebrow">SIMPLE PROCESS</p><h2>How It <span>Works</span></h2></div>
+<div class="row g-3">
+<div class="col-6 col-lg-3"><div class="step"><b>01</b><h4>Register</h4><p>Enter your details.</p></div></div>
+<div class="col-6 col-lg-3"><div class="step"><b>02</b><h4>Choose</h4><p>Photo or Video.</p></div></div>
+<div class="col-6 col-lg-3"><div class="step"><b>03</b><h4>Upload</h4><p>Submit your creation.</p></div></div>
+<div class="col-6 col-lg-3"><div class="step"><b>04</b><h4>Done</h4><p>Get confirmation.</p></div></div>
+</div>
+</div></section>
+
+<section id="rules" class="section">
+<div class="container">
+<div class="section-head"><p class="eyebrow">KEEP IT FAIR</p><h2>Competition <span>Rules</span></h2></div>
+<div class="rules-grid">
+<div>01 <strong>One valid entry</strong><p>Only one final entry per participant.</p></div>
+<div>02 <strong>Own your content</strong><p>Submit content created by you.</p></div>
+<div>03 <strong>Ganpati Aagman</strong><p>Entries should relate to the event.</p></div>
+<div>04 <strong>Original work</strong><p>No stolen or copyrighted content.</p></div>
+</div>
+</div></section>
+
+<section id="prizes" class="section prize-section">
+<div class="container text-center"><p class="eyebrow">RECOGNITION</p><h2>Win With <span>Creativity</span></h2>
+<div class="row justify-content-center g-4 mt-2">
+<div class="col-md-4"><div class="prize"><div>🥇</div><h3>1st Prize</h3><p>Prize details coming soon</p></div></div>
+<div class="col-md-4"><div class="prize"><div>🥈</div><h3>2nd Prize</h3><p>Prize details coming soon</p></div></div>
+<div class="col-md-4"><div class="prize"><div>🥉</div><h3>3rd Prize</h3><p>Prize details coming soon</p></div></div>
+</div>
+</div></section>
+
+<section class="cta"><div class="container text-center"><div class="om small-om">ॐ</div><h2>Ready to Capture Bappa's Arrival?</h2><a href="{{ url_for('registration') }}" class="btn btn-gold btn-lg">REGISTER NOW →</a></div></section>
+<footer><div class="container d-flex flex-wrap justify-content-between align-items-center gap-3"><span style="display:flex;align-items:center;gap:8px"><img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:28px;border-radius:4px"> New alkapuri cha maharaja — Ganpati Aagman Competition</span><span>© 2026 All Rights Reserved</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body></html>
