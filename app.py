@@ -11,7 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'ganpati-aagman-secret-2026')
-app.config['MAX_CONTENT_LENGTH'] = 110 * 1024 * 1024  # 110 MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 1100 * 1024 * 1024  # 1.1 GB max upload (1 GB video / 512 MB photo)
 
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')

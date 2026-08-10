@@ -75,12 +75,12 @@
     <div class="upload-zone" id="uploadZone">
       <div id="uploadIcon" class="upload-icon">📸</div>
       <h3 id="uploadTitle">Upload Your Photo</h3>
-      <p id="uploadHint">JPG, JPEG, PNG or WEBP • Max 15 MB</p>
+      <p id="uploadHint">JPG, JPEG, PNG or WEBP • Max 512 MB</p>
       <input id="media" type="file" class="form-control" accept="image/*" style="max-width:450px;margin:20px auto 0">
       <div id="fileInfo" class="file-info">✅ <span id="fileName"></span></div>
       <div id="preview" class="preview"></div>
     </div>
-    <p class="size-note" id="sizeNote">📸 Photo: Max 15 MB — JPG, PNG, WEBP</p>
+    <p class="size-note" id="sizeNote">📸 Photo: Max 512 MB — JPG, PNG, WEBP</p>
 
     <div id="uploadError" class="alert alert-danger d-none mt-3"></div>
     <button id="submitEntry" class="btn btn-gold btn-lg w-100 mt-4">SUBMIT MY ENTRY →</button>
@@ -115,8 +115,8 @@ if (!data) {
     document.getElementById("modeBadge").innerHTML = "🎥 Video Competition Mode";
     document.getElementById("uploadIcon").textContent = "🎥";
     document.getElementById("uploadTitle").textContent = "Upload Your Video";
-    document.getElementById("uploadHint").textContent = "MP4, MOV or WEBM • Max 100 MB";
-    document.getElementById("sizeNote").textContent = "🎥 Video: Max 100 MB — MP4, MOV, WEBM";
+    document.getElementById("uploadHint").textContent = "MP4, MOV or WEBM • Max 1 GB";
+    document.getElementById("sizeNote").textContent = "🎥 Video: Max 1 GB — MP4, MOV, WEBM";
     input.accept = "video/mp4,video/quicktime,video/webm";
     zone.classList.add("video-mode");
     bar.classList.add("video-bar");
@@ -134,7 +134,10 @@ if (!data) {
     fileInfo.classList.remove("show");
     if (!f) return;
 
-    document.getElementById("fileName").textContent = f.name + " (" + (f.size / 1024 / 1024).toFixed(2) + " MB)";
+    const sizeStr = (f.size >= 1024 * 1024 * 1024)
+      ? (f.size / (1024 * 1024 * 1024)).toFixed(2) + " GB"
+      : (f.size / (1024 * 1024)).toFixed(2) + " MB";
+    document.getElementById("fileName").textContent = f.name + " (" + sizeStr + ")";
     fileInfo.classList.add("show");
 
     const url = URL.createObjectURL(f);
@@ -165,9 +168,13 @@ if (!data) {
       errEl.textContent = `Please choose your ${isVideo ? "video" : "photo"} first.`;
       errEl.classList.remove("d-none"); return;
     }
-    const maxMB = isVideo ? 100 : 15;
-    if (f.size > maxMB * 1024 * 1024) {
-      errEl.textContent = `File too large. Max allowed: ${maxMB} MB. Your file: ${(f.size/1024/1024).toFixed(1)} MB`;
+    const maxBytes = isVideo ? (1024 * 1024 * 1024) : (512 * 1024 * 1024);
+    const maxLabel = isVideo ? "1 GB" : "512 MB";
+    if (f.size > maxBytes) {
+      const userSizeStr = (f.size >= 1024 * 1024 * 1024)
+        ? (f.size / (1024 * 1024 * 1024)).toFixed(2) + " GB"
+        : (f.size / (1024 * 1024)).toFixed(1) + " MB";
+      errEl.textContent = `File too large. Max allowed: ${maxLabel}. Your file: ${userSizeStr}`;
       errEl.classList.remove("d-none"); return;
     }
 
