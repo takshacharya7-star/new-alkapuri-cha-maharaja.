@@ -1107,6 +1107,9 @@ function openModalById(id) {
 }
 
 function openModal(e) {
+  // First ensure any currently running media is stopped
+  stopAllMedia();
+
   const isVideo = (e.media_filename || '').match(/\.(mp4|mov|webm)$/i);
   const phone = cleanPhone(e.mobile);
   const instaHandle = (e.instagram || '').replace(/^@/, '');
@@ -1116,7 +1119,7 @@ function openModal(e) {
     mediaHtml = `
       <div class="modal-media-box">
         ${isVideo
-          ? `<video controls playsinline src="${e.media_url}"></video>`
+          ? `<video id="activeModalVideo" controls playsinline src="${e.media_url}"></video>`
           : `<img src="${e.media_url}" alt="Participant Submission">`}
       </div>
     `;
@@ -1162,15 +1165,47 @@ function openModal(e) {
   document.getElementById('modal').classList.add('open');
 }
 
+function stopAllMedia() {
+  const modal = document.getElementById('modal');
+  const videos = modal.querySelectorAll('video');
+  videos.forEach(v => {
+    try {
+      v.pause();
+      v.currentTime = 0;
+      v.src = '';
+      v.load();
+    } catch (err) {}
+  });
+  const audios = modal.querySelectorAll('audio');
+  audios.forEach(a => {
+    try {
+      a.pause();
+      a.currentTime = 0;
+      a.src = '';
+      a.load();
+    } catch (err) {}
+  });
+}
+
 function closeModal() {
+  stopAllMedia();
+  document.getElementById('modalBody').innerHTML = '';
   document.getElementById('modal').classList.remove('open');
 }
 
+// Close when clicking outside the modal box
 document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-// Event Listeners
+// Close when pressing Escape key
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' || e.key === 'Esc') {
+    closeModal();
+  }
+});
+
+// Event Listeners for Filters & Search
 document.getElementById('searchInput').addEventListener('input', filterEntries);
 document.getElementById('filterType').addEventListener('change', filterEntries);
 document.getElementById('filterStatus').addEventListener('change', filterEntries);
