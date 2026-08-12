@@ -77,7 +77,7 @@ def api_submit():
         supabase.storage.from_('uploads').upload(
             filename,
             file_bytes,
-            {'content-type': file.content_type, 'upsert': True}
+            {'content-type': file.content_type or 'application/octet-stream', 'upsert': 'true'}
         )
         public_url = supabase.storage.from_('uploads').get_public_url(filename)
 
