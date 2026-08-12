@@ -60,6 +60,69 @@ def api_register():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/lookup', methods=['POST'])
+def api_lookup():
+    try:
+        data = request.get_json() or {}
+        query = str(data.get('query', '')).strip()
+        if not query:
+            return jsonify({'success': False, 'error': 'Mobile number or ID is required'}), 400
+
+        # Clean digits for mobile query
+        clean_digits = ''.join(c for c in query if c.isdigit())
+        if len(clean_digits) >= 10:
+            clean_mobile = clean_digits[-10:]
+        else:
+            clean_mobile = query
+
+        # Search by mobile or submission ID in Supabase
+        result = (
+            supabase.table('entries')
+            .select('*')
+            .or_(f"mobile.eq.{clean_mobile},mobile.eq.{query},id.eq.{query}")
+            .order('created_at', desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        if not result.data or len(result.data) == 0:
+            return jsonify({
+                'success': False,
+                'not_found': True,
+                'error': 'આ મોબાઈલ નંબર પર કોઈ રજીસ્ટ્રેશન મળ્યું નથી. કૃપા કરીને નવું રજીસ્ટ્રેશન કરો.'
+            }), 404
+
+        entry = result.data[0]
+        return jsonify({'success': True, 'entry': entry})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/update-entry', methods=['POST'])
+def api_update_entry():
+    try:
+        data = request.get_json() or {}
+        entry_id = data.get('id')
+        competition = data.get('competition')
+        captured = data.get('captured')
+
+        if not entry_id:
+            return jsonify({'success': False, 'error': 'Entry ID is required'}), 400
+
+        update_payload = {}
+        if competition in ['Photo', 'Video']:
+            update_payload['competition'] = competition
+        if captured in ['Mobile', 'Camera']:
+            update_payload['captured'] = captured
+
+        if update_payload:
+            supabase.table('entries').update(update_payload).eq('id', entry_id).execute()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/submit', methods=['POST'])
 def api_submit():
     try:

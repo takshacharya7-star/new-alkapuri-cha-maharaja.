@@ -1,33 +1,424 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Registration | Ganpati Aagman</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
-<body class="form-page"><nav class="navbar navbar-expand-lg"><div class="container"><a class="navbar-brand" href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:36px;width:auto;margin-right:8px;vertical-align:middle;border-radius:6px"> New alkapuri cha maharaja</a></div></nav>
-<main class="container form-wrap"><div class="form-card"><p class="eyebrow">STEP 01 / REGISTRATION</p><h1>Join the <span>Competition</span></h1><p class="muted">Fill your details. After registration, you'll be taken directly to the upload page.</p>
-<form id="registrationForm" novalidate>
-<div class="row g-3">
-<div class="col-md-6"><label>Participant Name *</label><input id="name" class="form-control" required placeholder="Enter your name"></div>
-<div class="col-md-6"><label>Mobile Number *</label><input id="mobile" class="form-control" required inputmode="numeric" placeholder="10-digit mobile number"></div>
-<div class="col-md-6"><label>Email *</label><input id="email" type="email" class="form-control" required placeholder="you@example.com"></div>
-<div class="col-md-6"><label>Instagram ID *</label><input id="instagram" class="form-control" required placeholder="@yourusername"></div>
-</div>
-<hr><label class="mb-2">Competition Type *</label><div class="choice-grid mb-4">
-<label class="choice"><input type="radio" name="competition" value="Photo" required><span>📸</span><strong>Photo Competition</strong><small>Capture Bappa's arrival</small></label>
-<label class="choice"><input type="radio" name="competition" value="Video"><span>🎥</span><strong>Video Competition</strong><small>Tell the Aagman story</small></label>
-</div>
-<label class="mb-2">Captured Using *</label><div class="choice-grid">
-<label class="choice compact"><input type="radio" name="captured" value="Mobile" required><span>📱</span><strong>Mobile</strong></label>
-<label class="choice compact"><input type="radio" name="captured" value="Camera"><span>📷</span><strong>Camera</strong></label>
-</div>
-<div id="error" class="alert alert-danger d-none mt-4"></div>
-<button class="btn btn-gold btn-lg w-100 mt-4" type="submit" id="submitBtn">CONTINUE TO UPLOAD →</button>
-</form></div></main>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Registration & Entry | New alkapuri cha maharaja</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  /* ── Flow Switcher Tabs ── */
+  .flow-tabs {
+    display: flex;
+    background: #f4e8d3;
+    border: 2px solid #e0caa2;
+    border-radius: 50px;
+    padding: 4px;
+    margin-bottom: 28px;
+    gap: 4px;
+  }
+  .flow-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 14px;
+    border-radius: 40px;
+    font-size: clamp(0.78rem, 2.5vw, 0.95rem);
+    font-weight: 700;
+    color: #76511c;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .flow-tab.active {
+    background: linear-gradient(135deg, #f0c35b, #b77a11);
+    color: #211006;
+    box-shadow: 0 4px 15px rgba(183, 122, 17, 0.35);
+  }
+  .tab-content-panel { display: none; }
+  .tab-content-panel.active { display: block; animation: fadeIn 0.25s ease-in-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Returning User Flow Styles ── */
+  .lookup-box {
+    background: #fffdf8;
+    border: 2px solid #ead6ae;
+    border-radius: 20px;
+    padding: clamp(20px, 4vw, 30px);
+    margin-bottom: 20px;
+  }
+  .phone-input-wrap {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 2px solid #dcc8a7;
+    border-radius: 14px;
+    padding: 4px 14px;
+    transition: border-color 0.2s;
+  }
+  .phone-input-wrap:focus-within {
+    border-color: #c38a21;
+    box-shadow: 0 0 0 3px rgba(210, 155, 43, 0.15);
+  }
+  .phone-prefix {
+    font-weight: 700;
+    color: #8a6425;
+    font-size: 1rem;
+    margin-right: 10px;
+    border-right: 1px solid #e0caa2;
+    padding-right: 10px;
+  }
+  .phone-field {
+    border: none;
+    outline: none;
+    font-size: 1.05rem;
+    font-family: inherit;
+    font-weight: 600;
+    width: 100%;
+    color: #321b10;
+    background: transparent;
+  }
+
+  /* ── Profile Card (Found) ── */
+  .profile-found-card {
+    display: none;
+    background: #fffbf3;
+    border: 2px solid #c9942f;
+    border-radius: 20px;
+    padding: 22px;
+    margin-top: 22px;
+    box-shadow: 0 10px 30px rgba(183, 122, 17, 0.12);
+    animation: fadeIn 0.3s ease;
+  }
+  .profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed #e0caa2;
+    margin-bottom: 16px;
+  }
+  .profile-name-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #321b10;
+    margin: 0;
+  }
+  .status-badge-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+  .status-submitted { background: #e8f7e9; color: #28723a; border: 1px solid #93d4a0; }
+  .status-registered { background: #fff6df; color: #b77a11; border: 1px solid #c38a21; }
+
+  .profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+    font-size: 0.85rem;
+  }
+  @media (max-width: 500px) {
+    .profile-info-grid { grid-template-columns: 1fr; }
+  }
+  .profile-info-item {
+    background: #fff;
+    border: 1px solid #eadbc1;
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+  .profile-info-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #8a705c;
+    font-weight: 600;
+  }
+  .profile-info-val {
+    font-weight: 600;
+    color: #321b10;
+    word-break: break-all;
+  }
+
+  /* ── Not Found / Not Registered Alert ── */
+  .not-registered-box {
+    display: none;
+    background: #fff4e5;
+    border: 2px dashed #e8821a;
+    border-radius: 18px;
+    padding: 24px 20px;
+    margin-top: 20px;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+  }
+  .not-reg-icon { font-size: 2.4rem; margin-bottom: 8px; }
+  .not-reg-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #b75306;
+    margin-bottom: 6px;
+  }
+  .not-reg-text {
+    font-size: 0.88rem;
+    color: #76511c;
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .btn-new-reg-switch {
+    background: linear-gradient(135deg, #f0c35b, #b77a11);
+    color: #211006;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(183, 122, 17, 0.3);
+    transition: transform 0.2s;
+  }
+  .btn-new-reg-switch:hover { transform: translateY(-2px); }
+
+  .reselect-heading {
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    color: #76511c;
+    font-weight: 700;
+    margin: 16px 0 10px;
+  }
+  .reselect-tip {
+    font-size: 0.8rem;
+    color: #8a705c;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body class="form-page">
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('home') }}">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:36px;width:auto;margin-right:8px;vertical-align:middle;border-radius:6px">
+      New alkapuri cha maharaja
+    </a>
+  </div>
+</nav>
+
+<main class="container form-wrap">
+  <div class="form-card">
+    <p class="eyebrow">GANPATI AAGMAN COMPETITION 2026</p>
+    <h1>Participant <span>Portal</span></h1>
+    <p class="muted">નવું રજીસ્ટ્રેશન કરવા અથવા અગાઉ કરેલ રજીસ્ટ્રેશનમાં ફોટો/વિડીયો અપલોડ કરવા નીચેનો વિકલ્પ પસંદ કરો.</p>
+
+    <!-- Flow Switcher Tabs -->
+    <div class="flow-tabs">
+      <button class="flow-tab active" id="tabBtnNew" onclick="switchTab('new')">
+        ✍️ New Registration<br><small style="font-size:0.7rem;font-weight:500">(નવું રજીસ્ટ્રેશન)</small>
+      </button>
+      <button class="flow-tab" id="tabBtnExisting" onclick="switchTab('existing')">
+        🔍 Already Registered?<br><small style="font-size:0.7rem;font-weight:500">(અગાઉ રજીસ્ટ્રેશન કરેલું છે)</small>
+      </button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         TAB 1: NEW REGISTRATION
+         ════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-content-panel active" id="panelNew">
+      <form id="registrationForm" novalidate>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label>Participant Name (સ્પર્ધકનું પૂરું નામ) *</label>
+            <input id="name" class="form-control" required placeholder="Enter your full name">
+          </div>
+          <div class="col-md-6">
+            <label>Mobile Number (મોબાઈલ નંબર) *</label>
+            <input id="mobile" class="form-control" required inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+          </div>
+          <div class="col-md-6">
+            <label>Email Address (ઈમેલ) *</label>
+            <input id="email" type="email" class="form-control" required placeholder="you@example.com">
+          </div>
+          <div class="col-md-6">
+            <label>Instagram ID (ઇન્સ્ટાગ્રામ હેન્ડલ) *</label>
+            <input id="instagram" class="form-control" required placeholder="@yourusername">
+          </div>
+        </div>
+
+        <hr>
+        <label class="mb-2">Competition Type (સ્પર્ધાનો પ્રકાર પસંદ કરો) *</label>
+        <div class="choice-grid mb-4">
+          <label class="choice">
+            <input type="radio" name="competition" value="Photo" checked required>
+            <span>📸</span>
+            <strong>Photo Competition</strong>
+            <small>JPG, PNG • Max 512 MB</small>
+          </label>
+          <label class="choice">
+            <input type="radio" name="competition" value="Video">
+            <span>🎥</span>
+            <strong>Video Competition</strong>
+            <small>MP4, MOV, WEBM • Max 1 GB</small>
+          </label>
+        </div>
+
+        <label class="mb-2">Captured Using (સાધન પસંદ કરો) *</label>
+        <div class="choice-grid">
+          <label class="choice compact">
+            <input type="radio" name="captured" value="Mobile" checked required>
+            <span>📱</span>
+            <strong>Mobile Phone</strong>
+          </label>
+          <label class="choice compact">
+            <input type="radio" name="captured" value="Camera">
+            <span>📷</span>
+            <strong>DSLR / Camera</strong>
+          </label>
+        </div>
+
+        <div id="newError" class="alert alert-danger d-none mt-4"></div>
+        <button class="btn btn-gold btn-lg w-100 mt-4" type="submit" id="submitBtn">
+          CONTINUE TO UPLOAD →
+        </button>
+      </form>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         TAB 2: ALREADY REGISTERED / LATE UPLOAD
+         ════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-content-panel" id="panelExisting">
+      <div class="lookup-box">
+        <label style="color:#76511c;font-size:0.95rem;margin-bottom:8px">
+          Enter Your Registered Mobile Number (રજીસ્ટર્ડ મોબાઈલ નંબર નાખો):
+        </label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">🇮🇳 +91</span>
+          <input type="tel" id="lookupMobile" class="phone-field" maxlength="10" placeholder="Enter 10-digit number" autocomplete="tel">
+        </div>
+        <button class="btn btn-gold w-100 mt-3" type="button" id="lookupBtn" onclick="lookupRegistration()">
+          🔍 FIND MY REGISTRATION →
+        </button>
+      </div>
+
+      <!-- NOT REGISTERED NOTICE BOX -->
+      <div class="not-registered-box" id="notRegisteredBox">
+        <div class="not-reg-icon">⚠️</div>
+        <h3 class="not-reg-title">તમે હજી રજીસ્ટ્રેશન નથી કર્યું!</h3>
+        <p class="not-reg-text" id="notRegMsg">
+          આ મોબાઈલ નંબર પર કોઈ અગાઉનું રજીસ્ટ્રેશન મળ્યું નથી. સ્પર્ધામાં ભાગ લેવા માટે કૃપા કરીને પહેલાં નવું રજીસ્ટ્રેશન કરો.
+        </p>
+        <button type="button" class="btn-new-reg-switch" onclick="switchToNewRegistrationWithPhone()">
+          👉 અહીં ક્લિક કરી નવું રજીસ્ટ્રેશન કરો (New Registration)
+        </button>
+      </div>
+
+      <!-- PROFILE FOUND & RESELECT OPTIONS -->
+      <div class="profile-found-card" id="profileFoundCard">
+        <div class="profile-header">
+          <div>
+            <span style="font-size:0.75rem;color:#8a6425;font-weight:600">WELCOME BACK</span>
+            <h3 class="profile-name-title" id="profName">—</h3>
+          </div>
+          <span class="status-badge-inline" id="profStatusBadge">—</span>
+        </div>
+
+        <div class="profile-info-grid">
+          <div class="profile-info-item">
+            <div class="profile-info-label">Submission ID</div>
+            <div class="profile-info-val" id="profId" style="font-family:monospace">—</div>
+          </div>
+          <div class="profile-info-item">
+            <div class="profile-info-label">Mobile Number</div>
+            <div class="profile-info-val" id="profMobile">—</div>
+          </div>
+          <div class="profile-info-item">
+            <div class="profile-info-label">Instagram</div>
+            <div class="profile-info-val" id="profInsta" style="color:#b77a11">—</div>
+          </div>
+          <div class="profile-info-item">
+            <div class="profile-info-label">Email</div>
+            <div class="profile-info-val" id="profEmail" style="font-size:0.78rem">—</div>
+          </div>
+        </div>
+
+        <hr style="border-color:#e0caa2;margin:16px 0">
+
+        <!-- RESELECT / CONFIRM CATEGORY & DEVICE -->
+        <h4 class="reselect-heading">🎯 Confirm or Change Your Category & Device</h4>
+        <p class="reselect-tip">તમે જે ફાઇલ અપલોડ કરવા માંગો છો તે મુજબ નીચે કેટેગરી અને ડિવાઇસ પસંદ કરો:</p>
+
+        <label class="mb-2">Competition Type *</label>
+        <div class="choice-grid mb-3">
+          <label class="choice">
+            <input type="radio" name="reselectCompetition" id="reselectCompPhoto" value="Photo">
+            <span>📸</span>
+            <strong>Photo Competition</strong>
+            <small>JPG, PNG • Max 512 MB</small>
+          </label>
+          <label class="choice">
+            <input type="radio" name="reselectCompetition" id="reselectCompVideo" value="Video">
+            <span>🎥</span>
+            <strong>Video Competition</strong>
+            <small>MP4, MOV • Max 1 GB</small>
+          </label>
+        </div>
+
+        <label class="mb-2">Captured Using *</label>
+        <div class="choice-grid mb-3">
+          <label class="choice compact">
+            <input type="radio" name="reselectCaptured" id="reselectCapMobile" value="Mobile">
+            <span>📱</span>
+            <strong>Mobile Phone</strong>
+          </label>
+          <label class="choice compact">
+            <input type="radio" name="reselectCaptured" id="reselectCapCamera" value="Camera">
+            <span>📷</span>
+            <strong>DSLR / Camera</strong>
+          </label>
+        </div>
+
+        <div id="existingError" class="alert alert-danger d-none mt-3"></div>
+
+        <button class="btn btn-gold btn-lg w-100 mt-3" type="button" id="confirmAndUploadBtn" onclick="confirmAndProceedUpload()">
+          CONFIRM & PROCEED TO UPLOAD →
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
 <script>
+let currentFoundEntry = null;
+
+// Tab switcher
+function switchTab(tab) {
+  const isNew = tab === 'new';
+  document.getElementById('tabBtnNew').classList.toggle('active', isNew);
+  document.getElementById('tabBtnExisting').classList.toggle('active', !isNew);
+  document.getElementById('panelNew').classList.toggle('active', isNew);
+  document.getElementById('panelExisting').classList.toggle('active', !isNew);
+}
+
+// ── TAB 1: New Registration ──────────────────────────────────────────────
 const form = document.getElementById("registrationForm");
-const err = document.getElementById("error");
+const newErr = document.getElementById("newError");
 const submitBtn = document.getElementById("submitBtn");
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  err.classList.add("d-none");
+  newErr.classList.add("d-none");
 
   const name = document.getElementById("name").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
@@ -37,8 +428,8 @@ form.addEventListener("submit", async (e) => {
   const captured = document.querySelector('input[name="captured"]:checked')?.value;
 
   if (!name || !/^\d{10}$/.test(mobile) || !email || !instagram || !competition || !captured) {
-    err.textContent = "Please complete all fields correctly. Mobile number must be 10 digits.";
-    err.classList.remove("d-none");
+    newErr.textContent = "Please complete all fields correctly. Mobile number must be 10 digits.";
+    newErr.classList.remove("d-none");
     return;
   }
 
@@ -56,18 +447,156 @@ form.addEventListener("submit", async (e) => {
     });
     const result = await res.json();
     if (result.success) {
-      // Save to sessionStorage so upload page can use it
       sessionStorage.setItem("ganpati_registration", JSON.stringify(data));
       location.href = "{{ url_for('upload') }}";
     } else {
       throw new Error(result.error || "Registration failed");
     }
   } catch (ex) {
-    err.textContent = "Error: " + ex.message;
-    err.classList.remove("d-none");
+    newErr.textContent = "Error: " + ex.message;
+    newErr.classList.remove("d-none");
     submitBtn.disabled = false;
     submitBtn.textContent = "CONTINUE TO UPLOAD →";
   }
 });
+
+// ── TAB 2: Returning User Lookup ─────────────────────────────────────────
+async function lookupRegistration() {
+  const input = document.getElementById('lookupMobile');
+  const query = input.value.trim();
+  const notRegBox = document.getElementById('notRegisteredBox');
+  const profCard = document.getElementById('profileFoundCard');
+  const lookupBtn = document.getElementById('lookupBtn');
+
+  notRegBox.style.display = 'none';
+  profCard.style.display = 'none';
+  currentFoundEntry = null;
+
+  if (!query || query.length < 10) {
+    alert("કૃપા કરીને તમારો 10 અંકનો મોબાઈલ નંબર નાખો.");
+    input.focus();
+    return;
+  }
+
+  lookupBtn.disabled = true;
+  lookupBtn.textContent = "Searching…";
+
+  try {
+    const res = await fetch("{{ url_for('api_lookup') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: query })
+    });
+    const data = await res.json();
+    lookupBtn.disabled = false;
+    lookupBtn.textContent = "🔍 FIND MY REGISTRATION →";
+
+    if (data.success && data.entry) {
+      currentFoundEntry = data.entry;
+      displayFoundProfile(data.entry);
+    } else {
+      // Not registered
+      notRegBox.style.display = 'block';
+      document.getElementById('notRegMsg').textContent = `મોબાઈલ નંબર ${query} પર કોઈ રજીસ્ટ્રેશન મળ્યું નથી. કૃપા કરીને નીચેના બટન પર ક્લિક કરી નવું રજીસ્ટ્રેશન કરો.`;
+    }
+  } catch (ex) {
+    lookupBtn.disabled = false;
+    lookupBtn.textContent = "🔍 FIND MY REGISTRATION →";
+    notRegBox.style.display = 'block';
+  }
+}
+
+function displayFoundProfile(entry) {
+  document.getElementById('profName').textContent = entry.name || 'Participant';
+  document.getElementById('profId').textContent = entry.id;
+  document.getElementById('profMobile').textContent = entry.mobile;
+  document.getElementById('profInsta').textContent = entry.instagram;
+  document.getElementById('profEmail').textContent = entry.email || '—';
+
+  const isSubmitted = entry.status === 'submitted';
+  const badge = document.getElementById('profStatusBadge');
+  if (isSubmitted) {
+    badge.className = "status-badge-inline status-submitted";
+    badge.innerHTML = "✅ Already Submitted (ફરી અપલોડ કરી શકો છો)";
+  } else {
+    badge.className = "status-badge-inline status-registered";
+    badge.innerHTML = "⏳ Registered (Pending Upload)";
+  }
+
+  // Pre-select radio buttons based on their previous choice
+  if (entry.competition === 'Video') {
+    document.getElementById('reselectCompVideo').checked = true;
+  } else {
+    document.getElementById('reselectCompPhoto').checked = true;
+  }
+
+  if (entry.captured === 'Camera') {
+    document.getElementById('reselectCapCamera').checked = true;
+  } else {
+    document.getElementById('reselectCapMobile').checked = true;
+  }
+
+  document.getElementById('profileFoundCard').style.display = 'block';
+}
+
+// 1-Click switch to New Registration with phone pre-filled
+function switchToNewRegistrationWithPhone() {
+  const enteredPhone = document.getElementById('lookupMobile').value.trim();
+  switchTab('new');
+  if (enteredPhone && enteredPhone.length === 10) {
+    document.getElementById('mobile').value = enteredPhone;
+    document.getElementById('name').focus();
+  }
+}
+
+// Confirm category & device update in DB, then proceed to upload
+async function confirmAndProceedUpload() {
+  if (!currentFoundEntry) return;
+
+  const btn = document.getElementById('confirmAndUploadBtn');
+  const err = document.getElementById('existingError');
+  err.classList.add('d-none');
+
+  const selectedComp = document.querySelector('input[name="reselectCompetition"]:checked')?.value || currentFoundEntry.competition;
+  const selectedCap = document.querySelector('input[name="reselectCaptured"]:checked')?.value || currentFoundEntry.captured;
+
+  btn.disabled = true;
+  btn.textContent = "Updating & Proceeding…";
+
+  try {
+    // Update category & device in database
+    await fetch("{{ url_for('api_update_entry') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: currentFoundEntry.id,
+        competition: selectedComp,
+        captured: selectedCap
+      })
+    });
+
+    // Save updated info in session storage
+    const updatedData = {
+      ...currentFoundEntry,
+      competition: selectedComp,
+      captured: selectedCap
+    };
+    sessionStorage.setItem("ganpati_registration", JSON.stringify(updatedData));
+
+    // Redirect to Upload page
+    location.href = "{{ url_for('upload') }}";
+  } catch (ex) {
+    err.textContent = "Update error: " + ex.message;
+    err.classList.remove('d-none');
+    btn.disabled = false;
+    btn.textContent = "CONFIRM & PROCEED TO UPLOAD →";
+  }
+}
+
+// Support Enter key on phone lookup
+document.getElementById('lookupMobile').addEventListener('keyup', (e) => {
+  if (e.key === 'Enter') lookupRegistration();
+});
 </script>
-</body></html>
+</body>
+</html>
