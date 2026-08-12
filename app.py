@@ -89,7 +89,7 @@ def api_lookup():
             return jsonify({
                 'success': False,
                 'not_found': True,
-                'error': 'આ મોબાઈલ નંબર પર કોઈ રજીસ્ટ્રેશન મળ્યું નથી. કૃપા કરીને નવું રજીસ્ટ્રેશન કરો.'
+                'error': 'No registration found with this mobile number. Please do a new registration.'
             }), 404
 
         entry = result.data[0]

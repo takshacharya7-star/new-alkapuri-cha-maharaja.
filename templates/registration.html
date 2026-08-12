@@ -23,7 +23,7 @@
     text-align: center;
     padding: 12px 14px;
     border-radius: 40px;
-    font-size: clamp(0.78rem, 2.5vw, 0.95rem);
+    font-size: clamp(0.82rem, 2.5vw, 0.95rem);
     font-weight: 700;
     color: #76511c;
     cursor: pointer;
@@ -219,15 +219,15 @@
   <div class="form-card">
     <p class="eyebrow">GANPATI AAGMAN COMPETITION 2026</p>
     <h1>Participant <span>Portal</span></h1>
-    <p class="muted">નવું રજીસ્ટ્રેશન કરવા અથવા અગાઉ કરેલ રજીસ્ટ્રેશનમાં ફોટો/વિડીયો અપલોડ કરવા નીચેનો વિકલ્પ પસંદ કરો.</p>
+    <p class="muted">Select an option below to submit a new entry or resume upload for an existing registration.</p>
 
     <!-- Flow Switcher Tabs -->
     <div class="flow-tabs">
       <button class="flow-tab active" id="tabBtnNew" onclick="switchTab('new')">
-        ✍️ New Registration<br><small style="font-size:0.7rem;font-weight:500">(નવું રજીસ્ટ્રેશન)</small>
+        ✍️ New Registration
       </button>
       <button class="flow-tab" id="tabBtnExisting" onclick="switchTab('existing')">
-        🔍 Already Registered?<br><small style="font-size:0.7rem;font-weight:500">(અગાઉ રજીસ્ટ્રેશન કરેલું છે)</small>
+        🔍 Already Registered?
       </button>
     </div>
 
@@ -238,25 +238,25 @@
       <form id="registrationForm" novalidate>
         <div class="row g-3">
           <div class="col-md-6">
-            <label>Participant Name (સ્પર્ધકનું પૂરું નામ) *</label>
+            <label>Participant Name *</label>
             <input id="name" class="form-control" required placeholder="Enter your full name">
           </div>
           <div class="col-md-6">
-            <label>Mobile Number (મોબાઈલ નંબર) *</label>
+            <label>Mobile Number *</label>
             <input id="mobile" class="form-control" required inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
           </div>
           <div class="col-md-6">
-            <label>Email Address (ઈમેલ) *</label>
+            <label>Email Address *</label>
             <input id="email" type="email" class="form-control" required placeholder="you@example.com">
           </div>
           <div class="col-md-6">
-            <label>Instagram ID (ઇન્સ્ટાગ્રામ હેન્ડલ) *</label>
+            <label>Instagram ID *</label>
             <input id="instagram" class="form-control" required placeholder="@yourusername">
           </div>
         </div>
 
         <hr>
-        <label class="mb-2">Competition Type (સ્પર્ધાનો પ્રકાર પસંદ કરો) *</label>
+        <label class="mb-2">Competition Type *</label>
         <div class="choice-grid mb-4">
           <label class="choice">
             <input type="radio" name="competition" value="Photo" checked required>
@@ -272,7 +272,7 @@
           </label>
         </div>
 
-        <label class="mb-2">Captured Using (સાધન પસંદ કરો) *</label>
+        <label class="mb-2">Captured Using *</label>
         <div class="choice-grid">
           <label class="choice compact">
             <input type="radio" name="captured" value="Mobile" checked required>
@@ -299,11 +299,11 @@
     <div class="tab-content-panel" id="panelExisting">
       <div class="lookup-box">
         <label style="color:#76511c;font-size:0.95rem;margin-bottom:8px">
-          Enter Your Registered Mobile Number (રજીસ્ટર્ડ મોબાઈલ નંબર નાખો):
+          Enter Your Registered Mobile Number:
         </label>
         <div class="phone-input-wrap">
           <span class="phone-prefix">🇮🇳 +91</span>
-          <input type="tel" id="lookupMobile" class="phone-field" maxlength="10" placeholder="Enter 10-digit number" autocomplete="tel">
+          <input type="tel" id="lookupMobile" class="phone-field" maxlength="10" placeholder="Enter 10-digit mobile number" autocomplete="tel">
         </div>
         <button class="btn btn-gold w-100 mt-3" type="button" id="lookupBtn" onclick="lookupRegistration()">
           🔍 FIND MY REGISTRATION →
@@ -313,12 +313,12 @@
       <!-- NOT REGISTERED NOTICE BOX -->
       <div class="not-registered-box" id="notRegisteredBox">
         <div class="not-reg-icon">⚠️</div>
-        <h3 class="not-reg-title">તમે હજી રજીસ્ટ્રેશન નથી કર્યું!</h3>
+        <h3 class="not-reg-title">No Registration Found!</h3>
         <p class="not-reg-text" id="notRegMsg">
-          આ મોબાઈલ નંબર પર કોઈ અગાઉનું રજીસ્ટ્રેશન મળ્યું નથી. સ્પર્ધામાં ભાગ લેવા માટે કૃપા કરીને પહેલાં નવું રજીસ્ટ્રેશન કરો.
+          No previous registration was found with this mobile number. Please register as a new participant to submit your entry.
         </p>
         <button type="button" class="btn-new-reg-switch" onclick="switchToNewRegistrationWithPhone()">
-          👉 અહીં ક્લિક કરી નવું રજીસ્ટ્રેશન કરો (New Registration)
+          👉 Click Here for New Registration
         </button>
       </div>
 
@@ -355,7 +355,7 @@
 
         <!-- RESELECT / CONFIRM CATEGORY & DEVICE -->
         <h4 class="reselect-heading">🎯 Confirm or Change Your Category & Device</h4>
-        <p class="reselect-tip">તમે જે ફાઇલ અપલોડ કરવા માંગો છો તે મુજબ નીચે કેટેગરી અને ડિવાઇસ પસંદ કરો:</p>
+        <p class="reselect-tip">Select your competition type and capture device for this upload:</p>
 
         <label class="mb-2">Competition Type *</label>
         <div class="choice-grid mb-3">
@@ -473,7 +473,7 @@ async function lookupRegistration() {
   currentFoundEntry = null;
 
   if (!query || query.length < 10) {
-    alert("કૃપા કરીને તમારો 10 અંકનો મોબાઈલ નંબર નાખો.");
+    alert("Please enter a valid 10-digit mobile number.");
     input.focus();
     return;
   }
@@ -497,7 +497,7 @@ async function lookupRegistration() {
     } else {
       // Not registered
       notRegBox.style.display = 'block';
-      document.getElementById('notRegMsg').textContent = `મોબાઈલ નંબર ${query} પર કોઈ રજીસ્ટ્રેશન મળ્યું નથી. કૃપા કરીને નીચેના બટન પર ક્લિક કરી નવું રજીસ્ટ્રેશન કરો.`;
+      document.getElementById('notRegMsg').textContent = `No previous registration was found with mobile number ${query}. Please click below to complete a new registration.`;
     }
   } catch (ex) {
     lookupBtn.disabled = false;
@@ -517,7 +517,7 @@ function displayFoundProfile(entry) {
   const badge = document.getElementById('profStatusBadge');
   if (isSubmitted) {
     badge.className = "status-badge-inline status-submitted";
-    badge.innerHTML = "✅ Already Submitted (ફરી અપલોડ કરી શકો છો)";
+    badge.innerHTML = "✅ Already Submitted (Re-upload available)";
   } else {
     badge.className = "status-badge-inline status-registered";
     badge.innerHTML = "⏳ Registered (Pending Upload)";
