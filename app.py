@@ -1,17 +1,37 @@
 import os
 import io
 import csv
+import json
 from datetime import datetime, timezone
 from flask import (Flask, render_template, request, jsonify,
                    session, redirect, url_for, Response)
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+from google.oauth2 import service_account
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'ganpati-aagman-secret-2026')
-app.config['MAX_CONTENT_LENGTH'] = 1100 * 1024 * 1024  # 1.1 GB max upload (1 GB video / 512 MB photo)
+app.config['MAX_CONTENT_LENGTH'] = 1100 * 1024 * 1024  # 1.1 GB max upload
+
+# ─── Google Drive Setup ───────────────────────────────────────────────────────
+GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
+def get_drive_service():
+    # Read credentials from environment variable (works on Vercel)
+    sa_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
+    if sa_json:
+        info = json.loads(sa_json)
+        creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    else:
+        # Fallback: read from local file (for local development)
+        sa_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', 'service_account.json')
+        creds = service_account.Credentials.from_service_account_file(sa_file, scopes=SCOPES)
+    return build('drive', 'v3', credentials=creds)
 
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
@@ -123,32 +143,151 @@ def api_update_entry():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/submit', methods=['POST'])
-def api_submit():
+@app.route('/api/get-upload-url', methods=['POST'])
+def api_get_upload_url():
+    """Step 1: Generate a Google Drive resumable upload URL.
+    Browser uploads directly to Google Drive — bypasses Vercel 4.5 MB limit.
+    """
     try:
-        entry_id = request.form.get('id')
-        file = request.files.get('media')
+        data       = request.get_json() or {}
+        entry_id   = data.get('id')
+        filename   = data.get('filename', 'upload.bin')
+        mimetype   = data.get('mimetype', 'application/octet-stream')
+        filesize   = data.get('filesize', 0)
+        orig_name  = data.get('original_filename', filename)
 
-        if not file or not entry_id:
-            return jsonify({'success': False, 'error': 'Missing file or id'}), 400
+        if not entry_id:
+            return jsonify({'success': False, 'error': 'Missing entry id'}), 400
 
-        ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else 'bin'
-        filename = f"{entry_id}.{ext}"
-        file_bytes = file.read()
+        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'bin'
+        drive_filename = f"{entry_id}.{ext}"
 
-        # Upload to Supabase Storage
-        supabase.storage.from_('uploads').upload(
-            filename,
-            file_bytes,
-            {'content-type': file.content_type or 'application/octet-stream', 'upsert': 'true'}
+        import googleapiclient.http as ghttp
+        import urllib.request
+
+        drive_service = get_drive_service()
+
+        # Build a resumable upload request manually to get the upload URL
+        file_metadata = {'name': drive_filename, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
+
+        # Use the files().create() to initiate but get the resumable URI
+        request_obj = drive_service.files().create(
+            body=file_metadata,
+            media_body=ghttp.MediaIoBaseUpload(
+                io.BytesIO(b''),
+                mimetype=mimetype,
+                resumable=True
+            ),
+            fields='id,webViewLink'
         )
-        public_url = supabase.storage.from_('uploads').get_public_url(filename)
 
-        # Update DB row
+        # Manually initiate resumable session to get the upload URL
+        import httplib2
+        from googleapiclient.http import _retry_request
+        http = drive_service._http
+
+        # Use the Drive API resumable upload endpoint directly
+        import google.auth.transport.requests
+        creds = service_account.Credentials.from_service_account_info(
+            json.loads(os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', '{}')),
+            scopes=SCOPES
+        ) if os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON') else \
+            service_account.Credentials.from_service_account_file(
+                os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', 'service_account.json'),
+                scopes=SCOPES
+            )
+
+        auth_req = google.auth.transport.requests.Request()
+        creds.refresh(auth_req)
+        token = creds.token
+
+        import urllib.request as urlreq
+        import urllib.error
+
+        meta_json = json.dumps({'name': drive_filename, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}).encode()
+        req = urlreq.Request(
+            f'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+            data=meta_json,
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json; charset=UTF-8',
+                'X-Upload-Content-Type': mimetype,
+                'X-Upload-Content-Length': str(filesize),
+            },
+            method='POST'
+        )
+        with urlreq.urlopen(req) as resp:
+            upload_url = resp.headers.get('Location')
+
+        # Pre-create DB entry as 'uploading'
+        supabase.table('entries').update({
+            'status':         'uploading',
+            'media_filename': orig_name,
+        }).eq('id', entry_id).execute()
+
+        return jsonify({
+            'success':    True,
+            'upload_url': upload_url,
+            'filename':   drive_filename,
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/submit-link', methods=['POST'])
+def api_submit_link():
+    try:
+        data = request.get_json() or {}
+        entry_id = data.get('id')
+        instagram_link = data.get('instagram_link', '').strip()
+
+        if not entry_id or not instagram_link:
+            return jsonify({'success': False, 'error': 'Missing registration ID or Instagram Link'}), 400
+
+        if 'instagram.com' not in instagram_link.lower():
+            return jsonify({'success': False, 'error': 'Please enter a valid Instagram Link'}), 400
+
+        supabase.table('entries').update({
+            'status':         'submitted',
+            'media_url':      instagram_link,
+            'media_filename': 'Instagram Link',
+            'submitted_at':   datetime.now(timezone.utc).isoformat(),
+        }).eq('id', entry_id).execute()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/complete-upload', methods=['POST'])
+def api_complete_upload():
+    """Step 2: After browser uploads directly to Drive, make file public & update DB."""
+    try:
+        data      = request.get_json() or {}
+        entry_id  = data.get('id')
+        file_id   = data.get('file_id')
+        orig_name = data.get('original_filename', '')
+
+        if not entry_id or not file_id:
+            return jsonify({'success': False, 'error': 'Missing id or file_id'}), 400
+
+        drive_service = get_drive_service()
+
+        # Make file publicly readable
+        drive_service.permissions().create(
+            fileId=file_id,
+            body={'type': 'anyone', 'role': 'reader'}
+        ).execute()
+
+        file_info = drive_service.files().get(
+            fileId=file_id, fields='webViewLink'
+        ).execute()
+        public_url = file_info.get('webViewLink', '')
+
         supabase.table('entries').update({
             'status':         'submitted',
             'media_url':      public_url,
-            'media_filename': file.filename,
+            'media_filename': orig_name,
             'submitted_at':   datetime.now(timezone.utc).isoformat(),
         }).eq('id', entry_id).execute()
 

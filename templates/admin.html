@@ -1007,7 +1007,7 @@ function renderView(entries) {
 function renderCards(entries) {
   const container = document.getElementById('cardsContainer');
   container.innerHTML = entries.map((e, i) => {
-    const isVideo = (e.media_filename || '').match(/\.(mp4|mov|webm)$/i);
+    const isVideo = e.competition === 'Video';
     const phone = cleanPhone(e.mobile);
     const instaHandle = (e.instagram || '').replace(/^@/, '');
 
@@ -1068,7 +1068,7 @@ function renderCards(entries) {
 function renderTable(entries) {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = entries.map((e, i) => {
-    const isVideo = (e.media_filename || '').match(/\.(mp4|mov|webm)$/i);
+    const isVideo = e.competition === 'Video';
     const phone = cleanPhone(e.mobile);
     const instaHandle = (e.instagram || '').replace(/^@/, '');
 
@@ -1110,19 +1110,30 @@ function openModal(e) {
   // First ensure any currently running media is stopped
   stopAllMedia();
 
-  const isVideo = (e.media_filename || '').match(/\.(mp4|mov|webm)$/i);
+  const isVideo = e.competition === 'Video';
   const phone = cleanPhone(e.mobile);
   const instaHandle = (e.instagram || '').replace(/^@/, '');
 
   let mediaHtml = '';
   if (e.media_url) {
-    mediaHtml = `
-      <div class="modal-media-box">
-        ${isVideo
-          ? `<video id="activeModalVideo" controls playsinline src="${e.media_url}"></video>`
-          : `<img src="${e.media_url}" alt="Participant Submission">`}
-      </div>
-    `;
+    if (e.media_url.includes('instagram.com')) {
+      mediaHtml = `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:32px 16px;text-align:center;margin-bottom:16px">
+          <p style="margin-bottom:16px;font-size:0.95rem;color:var(--text-muted)">🔗 Instagram Submission Link:</p>
+          <a href="${e.media_url}" target="_blank" class="btn-action btn-gold" style="font-size:0.9rem;padding:8px 20px;display:inline-flex;text-decoration:none">
+            👉 View Post/Reel on Instagram
+          </a>
+        </div>
+      `;
+    } else {
+      mediaHtml = `
+        <div class="modal-media-box">
+          ${isVideo
+            ? `<video id="activeModalVideo" controls playsinline src="${e.media_url}"></video>`
+            : `<img src="${e.media_url}" alt="Participant Submission">`}
+        </div>
+      `;
+    }
   } else {
     mediaHtml = `
       <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:12px;padding:32px 16px;text-align:center;color:var(--text-muted);margin-bottom:16px">

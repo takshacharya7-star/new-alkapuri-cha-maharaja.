@@ -78,20 +78,25 @@
 
     <!-- Upload Zone -->
     <div class="upload-zone" id="uploadZone">
-      <div id="uploadIcon" class="upload-icon">📸</div>
-      <h3 id="uploadTitle">Upload Your Photo</h3>
-      <p id="uploadHint">JPG, JPEG, PNG or WEBP • Max 512 MB</p>
-      <input id="media" type="file" class="form-control" accept="image/*" style="max-width:450px;margin:20px auto 0">
-      <div id="fileInfo" class="file-info">✅ <span id="fileName"></span></div>
-      <div id="preview" class="preview"></div>
+      <div id="uploadIcon" class="upload-icon">🔗</div>
+      <h3 id="uploadTitle">Submit Instagram Link</h3>
+      <p id="uploadHint">Please paste the link to your Instagram post/reel below</p>
+      
+      <!-- Collaboration Warning Alert Message -->
+      <div class="alert alert-danger" role="alert" style="background-color: #ffeef0; color: #d92d20; border: 1px solid #fda29b; border-radius: 12px; font-weight: 600; font-size: 0.9rem; text-align: left; padding: 15px; margin: 20px auto; max-width: 500px; line-height: 1.5;">
+        ⚠️ <strong style="color: #b21e1e;">IMPORTANT COLLABORATION REQUIREMENT:</strong><br>
+        Your Instagram link will only be valid if your post/reel is created as a <strong>Collaboration</strong> with the official Instagram page of <strong>"New Alkapuri Cha Maharaja"</strong>. Posts without collaboration approval will not be eligible.
+      </div>
+
+      <div class="mb-3" style="text-align: left; max-width: 500px; margin: 0 auto;">
+        <label for="instaLink" style="font-weight: 600; color: #4c250a; display: block; margin-bottom: 8px;">Instagram Post/Reel Link *</label>
+        <input type="url" id="instaLink" class="form-control" placeholder="https://www.instagram.com/p/... or https://www.instagram.com/reel/..." style="width: 100%; border: 1px solid #dcc8a7; padding: 12px; border-radius: 12px; font-size: 0.95rem; background: #fff;" required>
+      </div>
     </div>
-    <p class="size-note" id="sizeNote">📸 Photo: Max 512 MB — JPG, PNG, WEBP</p>
+    <p class="size-note" id="sizeNote">🔗 Instagram Collaboration Post/Reel link submission</p>
 
     <div id="uploadError" class="alert alert-danger d-none mt-3"></div>
     <button id="submitEntry" class="btn btn-gold btn-lg w-100 mt-4">SUBMIT MY ENTRY →</button>
-    <div id="progress" class="progress mt-3 d-none">
-      <div class="progress-bar" id="progressBar" style="width:0%">0%</div>
-    </div>
   </div>
 </main>
 
@@ -109,111 +114,63 @@ if (!data) {
     <div><b>Submission ID</b><span>${data.id}</span></div>`;
 
   const isVideo = data.competition === "Video";
-  const input = document.getElementById("media");
-  const zone = document.getElementById("uploadZone");
-  const bar = document.getElementById("progressBar");
 
   // ── Switch UI based on competition type ──────────────────────────
   if (isVideo) {
     // Video Mode
     document.getElementById("modeBadge").className = "mode-badge mode-video";
     document.getElementById("modeBadge").innerHTML = "🎥 Video Competition Mode";
-    document.getElementById("uploadIcon").textContent = "🎥";
-    document.getElementById("uploadTitle").textContent = "Upload Your Video";
-    document.getElementById("uploadHint").textContent = "MP4, MOV or WEBM • Max 1 GB";
-    document.getElementById("sizeNote").textContent = "🎥 Video: Max 1 GB — MP4, MOV, WEBM";
-    input.accept = "video/mp4,video/quicktime,video/webm";
-    zone.classList.add("video-mode");
-    bar.classList.add("video-bar");
+    document.getElementById("uploadIcon").textContent = "🔗";
+    document.getElementById("uploadTitle").textContent = "Submit Instagram Reel Link";
+    document.getElementById("uploadHint").textContent = "Please paste the link to your Instagram Reel below";
+    document.getElementById("sizeNote").textContent = "🔗 Instagram Collaboration Reel link submission";
   } else {
-    // Photo Mode (default — already set in HTML)
-    input.accept = "image/jpeg,image/png,image/webp";
+    // Photo Mode
+    document.getElementById("modeBadge").className = "mode-badge mode-photo";
+    document.getElementById("modeBadge").innerHTML = "📸 Photo Competition Mode";
+    document.getElementById("uploadIcon").textContent = "🔗";
+    document.getElementById("uploadTitle").textContent = "Submit Instagram Post Link";
+    document.getElementById("uploadHint").textContent = "Please paste the link to your Instagram Photo post below";
+    document.getElementById("sizeNote").textContent = "🔗 Instagram Collaboration Post link submission";
   }
-
-  // ── Preview on file select ────────────────────────────────────────
-  input.addEventListener("change", () => {
-    const f = input.files[0];
-    const preview = document.getElementById("preview");
-    const fileInfo = document.getElementById("fileInfo");
-    preview.innerHTML = "";
-    fileInfo.classList.remove("show");
-    if (!f) return;
-
-    const sizeStr = (f.size >= 1024 * 1024 * 1024)
-      ? (f.size / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-      : (f.size / (1024 * 1024)).toFixed(2) + " MB";
-    document.getElementById("fileName").textContent = f.name + " (" + sizeStr + ")";
-    fileInfo.classList.add("show");
-
-    const url = URL.createObjectURL(f);
-    if (isVideo) {
-      preview.innerHTML = `<video controls src="${url}" style="max-width:100%;max-height:320px;border-radius:15px;margin-top:20px"></video>`;
-    } else {
-      preview.innerHTML = `<img src="${url}" alt="Preview">`;
-    }
-  });
-
-  // ── Drag & Drop ───────────────────────────────────────────────────
-  zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
-  zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault(); zone.classList.remove("drag-over");
-    const f = e.dataTransfer.files[0];
-    if (f) { input.files = e.dataTransfer.files; input.dispatchEvent(new Event("change")); }
-  });
 
   // ── Submit ────────────────────────────────────────────────────────
   document.getElementById("submitEntry").addEventListener("click", async () => {
-    const f = input.files[0];
+    const linkInput = document.getElementById("instaLink");
+    const instaLink = linkInput.value.trim();
     const errEl = document.getElementById("uploadError");
-    const progress = document.getElementById("progress");
     errEl.classList.add("d-none");
 
-    if (!f) {
-      errEl.textContent = `Please choose your ${isVideo ? "video" : "photo"} first.`;
+    if (!instaLink) {
+      errEl.textContent = "Please enter your Instagram link first.";
       errEl.classList.remove("d-none"); return;
     }
-    const maxBytes = isVideo ? (1024 * 1024 * 1024) : (512 * 1024 * 1024);
-    const maxLabel = isVideo ? "1 GB" : "512 MB";
-    if (f.size > maxBytes) {
-      const userSizeStr = (f.size >= 1024 * 1024 * 1024)
-        ? (f.size / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-        : (f.size / (1024 * 1024)).toFixed(1) + " MB";
-      errEl.textContent = `File too large. Max allowed: ${maxLabel}. Your file: ${userSizeStr}`;
+    
+    if (!instaLink.toLowerCase().includes("instagram.com")) {
+      errEl.textContent = "Please enter a valid Instagram URL (must contain instagram.com).";
       errEl.classList.remove("d-none"); return;
     }
 
     document.getElementById("submitEntry").disabled = true;
-    document.getElementById("submitEntry").textContent = "Uploading…";
-    progress.classList.remove("d-none");
-
-    // Fake progress animation (up to 80%)
-    let n = 0;
-    const fake = setInterval(() => {
-      if (n < 80) { n += isVideo ? 2 : 5; bar.style.width = n + "%"; bar.textContent = n + "%"; }
-    }, isVideo ? 300 : 150);
+    document.getElementById("submitEntry").textContent = "Submitting link…";
 
     try {
-      const formData = new FormData();
-      formData.append("id", data.id);
-      formData.append("media", f);
+      const response = await fetch("/api/submit-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: data.id,
+          instagram_link: instaLink
+        })
+      });
+      const resData = await response.json();
+      if (!resData.success) throw new Error(resData.error || "Submission failed");
 
-      const res = await fetch("{{ url_for('api_submit') }}", { method: "POST", body: formData });
-      const result = await res.json();
-      clearInterval(fake);
-
-      if (result.success) {
-        bar.style.width = "100%"; bar.textContent = "100% ✓";
-        const submission = { ...data, status: "submitted", mediaName: f.name, mediaType: f.type, submittedAt: new Date().toISOString() };
-        sessionStorage.setItem("ganpati_submission", JSON.stringify(submission));
-        setTimeout(() => { location.href = "{{ url_for('success') }}"; }, 600);
-      } else {
-        throw new Error(result.error || "Upload failed");
-      }
+      const submission = { ...data, status: "submitted", mediaName: "Instagram Link", mediaType: "link", submittedAt: new Date().toISOString() };
+      sessionStorage.setItem("ganpati_submission", JSON.stringify(submission));
+      setTimeout(() => { location.href = "{{ url_for('success') }}"; }, 600);
     } catch (ex) {
-      clearInterval(fake);
-      progress.classList.add("d-none");
-      errEl.textContent = "Upload error: " + ex.message;
+      errEl.textContent = "Submission error: " + ex.message;
       errEl.classList.remove("d-none");
       document.getElementById("submitEntry").disabled = false;
       document.getElementById("submitEntry").textContent = "SUBMIT MY ENTRY →";
