@@ -335,6 +335,18 @@ def admin_data():
     return jsonify(result.data)
 
 
+@app.route('/admin/delete/<entry_id>', methods=['POST'])
+def admin_delete(entry_id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    try:
+        supabase.table('entries').delete().eq('id', entry_id).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
 @app.route('/admin/export')
 def admin_export():
     if not session.get('admin_logged_in'):

@@ -495,6 +495,22 @@
     align-items: center;
     gap: 4px;
   }
+  .btn-quick-delete {
+    background: rgba(255, 77, 77, 0.12);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    color: #ff4d4d;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .btn-quick-delete:hover { background: rgba(255, 77, 77, 0.25); }
   .btn-quick-media {
     background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     color: #211006;
@@ -1058,6 +1074,7 @@ function renderCards(entries) {
             <button class="btn-quick-media" onclick="openModalById('${e.id}')">
               ${e.media_url ? (isVideo ? '▶️ Video' : '🖼️ Photo') : '🔍 View'}
             </button>
+            <button class="btn-quick-delete" onclick="deleteEntry('${e.id}', '${esc(e.name)}')" title="Delete Entry">🗑️</button>
           </div>
         </div>
       </div>
@@ -1094,7 +1111,12 @@ function renderTable(entries) {
           </span>
         </td>
         <td class="tbl-muted" style="white-space:nowrap;font-size:0.72rem">${formatDate(e.submitted_at || e.created_at)}</td>
-        <td>${mediaBtn}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            ${mediaBtn}
+            <button class="btn-action btn-outline" style="font-size:0.7rem;padding:4px 8px;border-color:#ff4d4d;color:#ff4d4d" onclick="deleteEntry('${e.id}', '${esc(e.name)}')">🗑️ Delete</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
@@ -1170,6 +1192,7 @@ function openModal(e) {
       ${phone ? `<a href="tel:${phone}" class="btn-action btn-outline">📞 Call Participant</a>` : ''}
       ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" class="btn-action btn-gold" style="background:#25d366;color:#fff">💬 WhatsApp</a>` : ''}
       ${e.media_url ? `<a href="${e.media_url}" target="_blank" download class="btn-action btn-gold">📥 Open Original</a>` : ''}
+      <button class="btn-action btn-outline" style="border-color:#ff4d4d;color:#ff4d4d" onclick="deleteEntry('${e.id}', '${esc(e.name)}')">🗑️ Delete Entry</button>
     </div>
   `;
 
@@ -1221,6 +1244,27 @@ document.getElementById('searchInput').addEventListener('input', filterEntries);
 document.getElementById('filterType').addEventListener('change', filterEntries);
 document.getElementById('filterStatus').addEventListener('change', filterEntries);
 document.getElementById('filterDevice').addEventListener('change', filterEntries);
+
+async function deleteEntry(id, name) {
+  if (!confirm(`⚠️ Are you sure you want to delete the entry of "${name}"? This action cannot be undone.`)) {
+    return;
+  }
+  try {
+    const res = await fetch(`/admin/delete/${id}`, { method: 'POST' });
+    const result = await res.json();
+    if (result.success) {
+      alert('✅ Entry deleted successfully.');
+      loadData(true);
+      if (document.getElementById('modal').classList.contains('open')) {
+        closeModal();
+      }
+    } else {
+      alert('❌ Failed to delete: ' + result.error);
+    }
+  } catch (e) {
+    alert('❌ Error occurred: ' + e);
+  }
+}
 
 // Initial Load
 loadData();
