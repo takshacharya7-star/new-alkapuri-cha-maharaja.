@@ -296,23 +296,18 @@ def api_complete_upload():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ─── Settings API ─────────────────────────────────────────────────────────────
-SETTINGS_FILE = '/tmp/site_settings.json'
-
-def _read_settings():
-    try:
-        with open(SETTINGS_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return {'registration_open': True}
-
-def _write_settings(data):
-    with open(SETTINGS_FILE, 'w') as f:
-        json.dump(data, f)
 
 @app.route('/api/settings', methods=['GET'])
 def api_get_settings():
-    settings = _read_settings()
-    return jsonify({'success': True, 'registration_open': settings.get('registration_open', True)})
+    try:
+        result = supabase.table('settings').select('value').eq('key', 'registration_open').limit(1).execute()
+        if result.data:
+            is_open = result.data[0].get('value', 'true') == 'true'
+        else:
+            is_open = True
+        return jsonify({'success': True, 'registration_open': is_open})
+    except Exception:
+        return jsonify({'success': True, 'registration_open': True})
 
 
 @app.route('/api/settings', methods=['POST'])
@@ -322,9 +317,12 @@ def api_set_settings():
     try:
         data = request.get_json() or {}
         registration_open = bool(data.get('registration_open', True))
-        settings = _read_settings()
-        settings['registration_open'] = registration_open
-        _write_settings(settings)
+        value = 'true' if registration_open else 'false'
+        # Upsert — insert if not exists, update if exists
+        supabase.table('settings').upsert(
+            {'key': 'registration_open', 'value': value},
+            on_conflict='key'
+        ).execute()
         return jsonify({'success': True, 'registration_open': registration_open})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
