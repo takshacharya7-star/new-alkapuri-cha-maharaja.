@@ -408,20 +408,32 @@ let currentFoundEntry = null;
     const res = await fetch('/api/settings');
     const data = await res.json();
     if (data.registration_open === false) {
-      // Hide all tab content, show a closed banner
-      document.querySelectorAll('.tab-content-panel, .flow-tabs').forEach(el => el.style.display = 'none');
-      const closedBanner = document.createElement('div');
-      closedBanner.innerHTML = `
-        <div style="background:rgba(255,77,77,0.08);border:2px solid rgba(255,77,77,0.4);border-radius:18px;padding:30px 24px;text-align:center;margin:10px 0 24px">
-          <div style="font-size:2.5rem;margin-bottom:12px">🚫</div>
-          <div style="font-size:1.15rem;font-weight:700;color:#ff6b6b;margin-bottom:8px">Registrations Are Currently Closed</div>
-          <div style="font-size:0.88rem;color:#b08070;line-height:1.6">New registrations have been temporarily paused by the organizer.<br>Please check back later.</div>
-        </div>`;
-      const main = document.querySelector('main .container, main');
-      // Insert after flow-tabs
-      const flowTabs = document.querySelector('.flow-tabs');
-      if (flowTabs) flowTabs.after(closedBanner);
-      else main.prepend(closedBanner);
+      // Only hide the NEW REGISTRATION panel — keep "Already Registered?" working
+      const tabBtnNew = document.getElementById('tabBtnNew');
+      const panelNew  = document.getElementById('panelNew');
+
+      // Replace new-registration panel contents with a closed message
+      if (panelNew) {
+        panelNew.innerHTML = `
+          <div style="background:rgba(255,77,77,0.08);border:2px solid rgba(255,77,77,0.4);border-radius:18px;padding:36px 24px;text-align:center;margin:10px 0 10px">
+            <div style="font-size:2.5rem;margin-bottom:12px">🚫</div>
+            <div style="font-size:1.15rem;font-weight:700;color:#ff6b6b;margin-bottom:8px">New Registrations Are Closed</div>
+            <div style="font-size:0.88rem;color:#b08070;line-height:1.6">
+              New registrations have been temporarily paused by the organizer.<br>
+              <strong style="color:#c99040;">Already registered?</strong> Click the <em>"Already Registered?"</em> tab above to upload your entry.
+            </div>
+          </div>`;
+      }
+
+      // Disable the New Registration tab button visually
+      if (tabBtnNew) {
+        tabBtnNew.style.opacity = '0.45';
+        tabBtnNew.style.cursor  = 'not-allowed';
+        tabBtnNew.onclick = (e) => e.preventDefault();
+      }
+
+      // Auto-switch to the "Already Registered?" tab
+      switchTab('existing');
     }
   } catch (e) { /* if error, allow registration to proceed */ }
 })();
