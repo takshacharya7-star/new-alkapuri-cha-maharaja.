@@ -296,18 +296,23 @@ def api_complete_upload():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ─── Settings API ─────────────────────────────────────────────────────────────
+SETTINGS_FILE = '/tmp/site_settings.json'
+
+def _read_settings():
+    try:
+        with open(SETTINGS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {'registration_open': True}
+
+def _write_settings(data):
+    with open(SETTINGS_FILE, 'w') as f:
+        json.dump(data, f)
 
 @app.route('/api/settings', methods=['GET'])
 def api_get_settings():
-    try:
-        result = supabase.table('settings').select('*').eq('key', 'registration_open').limit(1).execute()
-        if result.data:
-            value = result.data[0].get('value', 'true')
-        else:
-            value = 'true'
-        return jsonify({'success': True, 'registration_open': value == 'true'})
-    except Exception as e:
-        return jsonify({'success': True, 'registration_open': True})
+    settings = _read_settings()
+    return jsonify({'success': True, 'registration_open': settings.get('registration_open', True)})
 
 
 @app.route('/api/settings', methods=['POST'])
@@ -316,14 +321,10 @@ def api_set_settings():
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
     try:
         data = request.get_json() or {}
-        registration_open = data.get('registration_open', True)
-        value = 'true' if registration_open else 'false'
-        # Upsert the setting
-        existing = supabase.table('settings').select('key').eq('key', 'registration_open').limit(1).execute()
-        if existing.data:
-            supabase.table('settings').update({'value': value}).eq('key', 'registration_open').execute()
-        else:
-            supabase.table('settings').insert({'key': 'registration_open', 'value': value}).execute()
+        registration_open = bool(data.get('registration_open', True))
+        settings = _read_settings()
+        settings['registration_open'] = registration_open
+        _write_settings(settings)
         return jsonify({'success': True, 'registration_open': registration_open})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
