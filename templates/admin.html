@@ -163,6 +163,107 @@
     padding: 20px 14px 40px;
   }
 
+  /* ── Registration Toggle Card ── */
+  .reg-toggle-banner {
+    background: var(--surface);
+    border: 2px solid var(--border-strong);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .reg-toggle-banner.reg-open {
+    border-color: rgba(72, 199, 142, 0.55);
+    background: rgba(72, 199, 142, 0.06);
+  }
+  .reg-toggle-banner.reg-closed {
+    border-color: rgba(255, 77, 77, 0.45);
+    background: rgba(255, 77, 77, 0.06);
+  }
+  .reg-toggle-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .reg-toggle-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .reg-open .reg-toggle-icon { background: rgba(72, 199, 142, 0.18); }
+  .reg-closed .reg-toggle-icon { background: rgba(255, 77, 77, 0.15); }
+  .reg-toggle-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .reg-toggle-status {
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: color 0.3s;
+  }
+  .reg-open .reg-toggle-status { color: #48c78e; }
+  .reg-closed .reg-toggle-status { color: #ff6b6b; }
+  /* The actual switch */
+  .switch-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .switch-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 58px;
+    height: 30px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    background: rgba(255, 77, 77, 0.35);
+    border: 1.5px solid rgba(255, 77, 77, 0.5);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .toggle-switch input:checked + .toggle-track {
+    background: rgba(72, 199, 142, 0.4);
+    border-color: #48c78e;
+  }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ff6b6b;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.3s, background 0.3s;
+  }
+  .toggle-switch input:checked ~ .toggle-thumb {
+    transform: translateX(28px);
+    background: #48c78e;
+  }
+
   /* ── Stats Grid (Phone Optimized) ── */
   .stats-grid {
     display: grid;
@@ -781,6 +882,25 @@
 <!-- Main -->
 <main>
 
+  <!-- Registration ON/OFF Toggle Banner -->
+  <div class="reg-toggle-banner reg-open" id="regToggleBanner">
+    <div class="reg-toggle-left">
+      <div class="reg-toggle-icon" id="regToggleIcon">📝</div>
+      <div>
+        <div class="reg-toggle-title">New Registrations</div>
+        <div class="reg-toggle-status" id="regToggleStatusText">Loading…</div>
+      </div>
+    </div>
+    <div class="switch-wrap">
+      <span class="switch-label" id="regToggleSwitchLabel">ON</span>
+      <label class="toggle-switch" title="Toggle Registration">
+        <input type="checkbox" id="regToggleCheckbox" onchange="toggleRegistration(this.checked)">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+  </div>
+
   <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card">
@@ -1268,9 +1388,66 @@ async function deleteEntry(id, name) {
 
 // Initial Load
 loadData();
+loadRegistrationStatus();
 
 // Auto refresh every 45 seconds
 setInterval(() => loadData(false), 45000);
+
+// ── Registration ON/OFF Toggle ────────────────────────────────────────────────
+async function loadRegistrationStatus() {
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    applyRegStatus(data.registration_open !== false);
+  } catch (e) {
+    applyRegStatus(true); // default open if error
+  }
+}
+
+function applyRegStatus(isOpen) {
+  const banner = document.getElementById('regToggleBanner');
+  const checkbox = document.getElementById('regToggleCheckbox');
+  const statusText = document.getElementById('regToggleStatusText');
+  const switchLabel = document.getElementById('regToggleSwitchLabel');
+  const icon = document.getElementById('regToggleIcon');
+
+  checkbox.checked = isOpen;
+  banner.classList.toggle('reg-open', isOpen);
+  banner.classList.toggle('reg-closed', !isOpen);
+  statusText.textContent = isOpen
+    ? '✅ OPEN — Participants can register'
+    : '🔴 CLOSED — New registrations are blocked';
+  switchLabel.textContent = isOpen ? 'ON' : 'OFF';
+  icon.textContent = isOpen ? '📝' : '🚫';
+}
+
+async function toggleRegistration(isOpen) {
+  const checkbox = document.getElementById('regToggleCheckbox');
+  checkbox.disabled = true;
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registration_open: isOpen })
+    });
+    const data = await res.json();
+    if (data.success) {
+      applyRegStatus(data.registration_open);
+    } else {
+      alert('❌ Failed to update: ' + (data.error || 'Unknown error'));
+      // revert toggle
+      checkbox.checked = !isOpen;
+      applyRegStatus(!isOpen);
+    }
+  } catch (e) {
+    alert('❌ Network error. Please try again.');
+    checkbox.checked = !isOpen;
+    applyRegStatus(!isOpen);
+  } finally {
+    checkbox.disabled = false;
+  }
+}
+
 </script>
 </body>
 </html>
